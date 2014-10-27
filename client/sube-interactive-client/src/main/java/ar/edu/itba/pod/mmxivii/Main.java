@@ -6,6 +6,10 @@ import javax.annotation.Nonnull;
 
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.server.UID;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
 
 import static ar.edu.itba.pod.mmxivii.sube.common.Utils.*;
 
@@ -37,13 +41,32 @@ public class Main extends BaseMain
 
 	private void run() throws RemoteException
 	{
-		System.out.println("Main.run");
-		final Card card = cardClient.newCard("alumno", "tarjeta");
-        System.out.println(cardClient.getCardBalance(card.getId()));
-        final double primero = cardClient.recharge(card.getId(), "primero", 100);
-		System.out.println("primero = " + primero);
-		final double bondi = cardClient.travel(card.getId(), "bondi", 3);
-		System.out.println("bondi = " + bondi);
-//		cardClient.newCard()
+        Map<String, UID> ids = new HashMap<>();
+        System.out.println("Starting Server!");
+        final Scanner scan = new Scanner(System.in);
+        String line;
+        do {
+            line = scan.nextLine();
+            if (line.startsWith("Create Card"))
+            {
+                Card newCard = cardClient.newCard(line.split(" ")[2], line.split(" ")[3]);
+                ids.put(newCard.getId().toString(), newCard.getId());
+                System.out.println("New Card " + newCard.getId().toString());
+            }
+            else if (line.startsWith("Get Balance"))
+            {
+                System.out.println(cardClient.getCardBalance(ids.get(line.split(" ")[2])));
+            }
+            else if (line.startsWith("Recharge"))
+            {
+                System.out.println(cardClient.recharge(ids.get(line.split(" ")[1]), line.split(" ")[2], Double.valueOf(line.split(" ")[3])));
+            }
+            else if (line.startsWith("Travel"))
+            {
+                System.out.println(cardClient.recharge(ids.get(line.split(" ")[1]), line.split(" ")[2], Double.valueOf(line.split(" ")[2])));
+            }
+        } while(!"x".equals(line));
+        System.out.println("Server exit.");
+        System.exit(0);
 	}
 }
