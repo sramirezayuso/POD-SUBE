@@ -42,6 +42,7 @@ public class Main extends BaseMain
 			line = scan.next();
 			System.out.println("Service running");
 		} while(!"x".equals(line));
+        loadBalancer.unregisterCacheNode(cardCacheNode);
 		System.out.println("Service exit.");
 		System.exit(0);
 
