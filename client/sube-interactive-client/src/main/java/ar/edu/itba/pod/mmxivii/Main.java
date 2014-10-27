@@ -1,4 +1,4 @@
-package ar.edu.itba.pod.mmxivii.sube.client;
+package ar.edu.itba.pod.mmxivii;
 
 import ar.edu.itba.pod.mmxivii.sube.common.*;
 
@@ -17,8 +17,8 @@ public class Main extends BaseMain
 	{
 		super(args, DEFAULT_CLIENT_OPTIONS);
 		getRegistry();
-        CardRegistry cardRegistry = Utils.lookupObject(CARD_REGISTRY_BIND);
-        CardServiceRegistry cardServiceRegistry = Utils.lookupObject(CARD_SERVICE_REGISTRY_BIND);
+        CardRegistry cardRegistry = lookupObject(CARD_REGISTRY_BIND);
+        CardServiceRegistry cardServiceRegistry = lookupObject(CARD_SERVICE_REGISTRY_BIND);
         try
         {
             cardClient = new InteractiveCardClient(cardRegistry, cardServiceRegistry);

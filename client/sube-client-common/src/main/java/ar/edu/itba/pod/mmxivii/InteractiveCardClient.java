@@ -5,7 +5,7 @@
 * MuleSoft. If such an agreement is not in place, you may not use the software.
 */
 
-package ar.edu.itba.pod.mmxivii.sube.client;
+package ar.edu.itba.pod.mmxivii;
 
 import ar.edu.itba.pod.mmxivii.sube.common.*;
 

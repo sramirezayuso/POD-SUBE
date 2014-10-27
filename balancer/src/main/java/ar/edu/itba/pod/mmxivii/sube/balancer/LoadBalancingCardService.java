@@ -61,7 +61,7 @@ public class LoadBalancingCardService extends UnicastRemoteObject implements Loa
     {
         try
         {
-            return cacheNodes.get(id.toString().hashCode() % cacheNodeNumber).getCardBalance(id);
+            return cacheNodes.get(Math.abs(id.toString().hashCode()) % cacheNodeNumber).getCardBalance(id);
         }
         catch (RemoteException e)
         {
@@ -75,7 +75,7 @@ public class LoadBalancingCardService extends UnicastRemoteObject implements Loa
     {
         try
         {
-            return cacheNodes.get(id.toString().hashCode() % cacheNodeNumber).travel(id, description, amount);
+            return cacheNodes.get(Math.abs(id.toString().hashCode()) % cacheNodeNumber).travel(id, description, amount);
         }
         catch (RemoteException e)
         {
@@ -89,7 +89,7 @@ public class LoadBalancingCardService extends UnicastRemoteObject implements Loa
     {
         try
         {
-            return cacheNodes.get(id.toString().hashCode() % cacheNodeNumber).recharge(id, description, amount);
+            return cacheNodes.get(Math.abs(id.toString().hashCode()) % cacheNodeNumber).recharge(id, description, amount);
         }
         catch (RemoteException e)
         {
@@ -157,9 +157,9 @@ public class LoadBalancingCardService extends UnicastRemoteObject implements Loa
     {
         System.out.println("Removing dead node...");
         CardCacheNode backupNode;
-        if (id.toString().hashCode() % cacheNodeNumber == cacheNodeNumber-1)
+        if (Math.abs(id.toString().hashCode()) % cacheNodeNumber == cacheNodeNumber-1)
         {
-            backupNode = cacheNodes.get((id.toString().hashCode() % cacheNodeNumber) + 1);
+            backupNode = cacheNodes.get((Math.abs(id.toString().hashCode()) % cacheNodeNumber) + 1);
         }
         else
         {
@@ -167,7 +167,7 @@ public class LoadBalancingCardService extends UnicastRemoteObject implements Loa
         }
         backupNode.flushSecondary();
 
-        CardCacheNode cacheNode = cacheNodes.get(id.toString().hashCode() % cacheNodeNumber);
+        CardCacheNode cacheNode = cacheNodes.get(Math.abs(id.toString().hashCode()) % cacheNodeNumber);
         for (CardCacheNode originalCacheNode : cacheNodes)
         {
             try
