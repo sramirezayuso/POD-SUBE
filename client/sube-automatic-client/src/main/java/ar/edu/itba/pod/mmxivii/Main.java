@@ -8,12 +8,15 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Scanner;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static ar.edu.itba.pod.mmxivii.sube.common.Utils.CARD_REGISTRY_BIND;
 import static ar.edu.itba.pod.mmxivii.sube.common.Utils.CARD_SERVICE_REGISTRY_BIND;
+import static ar.edu.itba.pod.mmxivii.sube.common.Utils.delay;
 
 public class Main extends BaseMain
 {
@@ -53,12 +56,11 @@ public class Main extends BaseMain
                 try
                 {
                     Random rand = new Random();
-                    int randomCard = rand.nextInt(registeredCards.size());
                     boolean create  = rand.nextBoolean();
 
                     if(create || registeredCards.size() == 0)
                     {
-                        final Card card = cardClient.newCard(String.valueOf(rand.nextLong()), "tarjeta");
+                        final Card card = cardClient.newCard(String.valueOf(rand.nextBoolean()), "tarjeta");
                         registeredCards.add(card);
                         System.out.println(cardClient.getCardBalance(card.getId()));
                         final double recharge = cardClient.recharge(card.getId(), "recharged", rand.nextInt(100));
@@ -68,6 +70,7 @@ public class Main extends BaseMain
                     }
                     else
                     {
+                        int randomCard = rand.nextInt(registeredCards.size());
                         final Card card = registeredCards.get(randomCard);
                         System.out.println(cardClient.getCardBalance(card.getId()));
                         final double recharge = cardClient.recharge(card.getId(), "recharged", rand.nextInt(100));
@@ -80,16 +83,38 @@ public class Main extends BaseMain
                 {
                     e.printStackTrace();
                 }
+                catch (IllegalArgumentException e)
+                {
+                    System.out.println("Attempted to travel without enough money.");
+                }
             }
         };
 
-        ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(5);
-        scheduledExecutorService.scheduleWithFixedDelay(loadTester, 1, 1, TimeUnit.MINUTES);
-        scheduledExecutorService.scheduleWithFixedDelay(loadTester, 1, 1, TimeUnit.MINUTES);
-        scheduledExecutorService.scheduleWithFixedDelay(loadTester, 1, 1, TimeUnit.MINUTES);
-        scheduledExecutorService.scheduleWithFixedDelay(loadTester, 1, 1, TimeUnit.MINUTES);
-        scheduledExecutorService.scheduleWithFixedDelay(loadTester, 1, 1, TimeUnit.MINUTES);
+        final Scanner scan = new Scanner(System.in);
+        String line;
 
-//		cardClient.newCard()
-	}
+        System.out.println("Automatic client started.");
+        do {
+            try
+            {
+                delay();
+                Thread task = new Thread(loadTester, "Load Tester");
+                task.setDaemon(true);
+                task.start();
+                try {
+                    task.join(1000);
+                } catch (InterruptedException e) {
+            /* if somebody interrupts us he knows what he is doing */
+                }
+                if (task.isAlive()) {
+                    task.interrupt();
+                    throw new TimeoutException();
+                }
+            }
+            catch( TimeoutException e)
+            {
+
+            }
+        } while(true);
+    }
 }
