@@ -13,6 +13,7 @@ import ar.edu.itba.pod.mmxivii.sube.common.LoadBalancer;
 import ar.edu.itba.pod.mmxivii.sube.common.Utils;
 
 import javax.annotation.Nonnull;
+import java.net.ConnectException;
 import java.rmi.RemoteException;
 import java.rmi.server.UID;
 import java.rmi.server.UnicastRemoteObject;
@@ -58,19 +59,43 @@ public class LoadBalancingCardService extends UnicastRemoteObject implements Loa
     @Override
     public double getCardBalance(@Nonnull UID id) throws RemoteException
     {
-        return cacheNodes.get(id.hashCode() % cacheNodeNumber).getCardBalance(id);
+        try
+        {
+            return cacheNodes.get(id.toString().hashCode() % cacheNodeNumber).getCardBalance(id);
+        }
+        catch (RemoteException e)
+        {
+            handleDeadNode(id);
+            return getCardBalance(id);
+        }
     }
 
     @Override
     public double travel(@Nonnull UID id, @Nonnull String description, double amount) throws RemoteException
     {
-        return cacheNodes.get(id.hashCode() % cacheNodeNumber).travel(id, description, amount);
+        try
+        {
+            return cacheNodes.get(id.toString().hashCode() % cacheNodeNumber).travel(id, description, amount);
+        }
+        catch (RemoteException e)
+        {
+            handleDeadNode(id);
+            return travel(id, description, amount);
+        }
     }
 
     @Override
     public double recharge(@Nonnull UID id, @Nonnull String description, double amount) throws RemoteException
     {
-        return cacheNodes.get(id.hashCode() % cacheNodeNumber).recharge(id, description, amount);
+        try
+        {
+            return cacheNodes.get(id.toString().hashCode() % cacheNodeNumber).recharge(id, description, amount);
+        }
+        catch (RemoteException e)
+        {
+            handleDeadNode(id);
+            return recharge(id, description, amount);
+        }
     }
 
     public void registerCacheNode(CardCacheNode cacheNode) throws RemoteException
@@ -109,6 +134,48 @@ public class LoadBalancingCardService extends UnicastRemoteObject implements Loa
             try
             {
                 originalCacheNode.flush();
+            }
+            catch (RemoteException e)
+            {
+
+            }
+        }
+        if (cacheNodes.indexOf(cacheNode) == cacheNodeNumber - 1)
+        {
+            cacheNodes.get(cacheNodes.indexOf(cacheNode) - 1).addBackupNode(cacheNodes.get(0));
+        }
+        else
+        {
+            cacheNodes.get(cacheNodes.indexOf(cacheNode) - 1).addBackupNode(cacheNodes.get(cacheNodes.indexOf(cacheNode) + 1));
+        }
+        cacheNodes.remove(cacheNode);
+        cacheNodeNumber--;
+        System.out.println("Node removed");
+    }
+
+    private void handleDeadNode(UID id) throws RemoteException
+    {
+        System.out.println("Removing dead node...");
+        CardCacheNode backupNode;
+        if (id.toString().hashCode() % cacheNodeNumber == cacheNodeNumber-1)
+        {
+            backupNode = cacheNodes.get((id.toString().hashCode() % cacheNodeNumber) + 1);
+        }
+        else
+        {
+            backupNode = cacheNodes.get(0);
+        }
+        backupNode.flushSecondary();
+
+        CardCacheNode cacheNode = cacheNodes.get(id.toString().hashCode() % cacheNodeNumber);
+        for (CardCacheNode originalCacheNode : cacheNodes)
+        {
+            try
+            {
+                if(!originalCacheNode.equals(cacheNode))
+                {
+                    originalCacheNode.flush();
+                }
             }
             catch (RemoteException e)
             {
