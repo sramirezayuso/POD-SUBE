@@ -63,7 +63,7 @@ public class Main extends BaseMain
             }
             else if (line.startsWith("Travel"))
             {
-                System.out.println(cardClient.recharge(ids.get(line.split(" ")[1]), line.split(" ")[2], Double.valueOf(line.split(" ")[2])));
+                System.out.println(cardClient.travel(ids.get(line.split(" ")[1]), line.split(" ")[2], Double.valueOf(line.split(" ")[3])));
             }
         } while(!"x".equals(line));
         System.out.println("Server exit.");
