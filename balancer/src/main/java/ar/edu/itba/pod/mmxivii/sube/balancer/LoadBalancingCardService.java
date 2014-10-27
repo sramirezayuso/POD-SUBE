@@ -75,6 +75,7 @@ public class LoadBalancingCardService extends UnicastRemoteObject implements Loa
 
     public void registerCacheNode(CardCacheNode cacheNode) throws RemoteException
     {
+        System.out.println("Adding node...");
         for (CardCacheNode originalCacheNode : cacheNodes)
         {
             try
@@ -97,10 +98,12 @@ public class LoadBalancingCardService extends UnicastRemoteObject implements Loa
         cacheNodes.add(cacheNode);
         cacheNode.addBackupNode(cacheNodes.get(0));
         cacheNodeNumber++;
+        System.out.println("Node added");
     }
 
     public void unregisterCacheNode(CardCacheNode cacheNode) throws RemoteException
     {
+        System.out.println("Removing node...");
         for (CardCacheNode originalCacheNode : cacheNodes)
         {
             try
@@ -122,6 +125,7 @@ public class LoadBalancingCardService extends UnicastRemoteObject implements Loa
         }
         cacheNodes.remove(cacheNode);
         cacheNodeNumber--;
+        System.out.println("Node removed");
     }
 
 

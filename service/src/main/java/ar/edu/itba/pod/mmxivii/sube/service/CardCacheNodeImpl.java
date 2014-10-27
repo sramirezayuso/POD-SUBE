@@ -43,6 +43,7 @@ public class CardCacheNodeImpl extends UnicastRemoteObject implements CardCacheN
     @Override
     public double getCardBalance(@Nonnull UID id) throws RemoteException
     {
+        System.out.println("Getting card balance for card " + id);
         try
         {
             if (cachedCardValues.containsKey(id))
@@ -66,6 +67,7 @@ public class CardCacheNodeImpl extends UnicastRemoteObject implements CardCacheN
     @Override
     public double travel(@Nonnull UID id, @Nonnull String description, double amount) throws RemoteException
     {
+        System.out.println("Traveling using card " + id);
         String[] s = Double.toString(amount).split("\\.");
         if (amount > 100 || amount < 1 || s[s.length - 1].length() > 2)
         {
@@ -109,6 +111,7 @@ public class CardCacheNodeImpl extends UnicastRemoteObject implements CardCacheN
     @Override
     public double recharge(@Nonnull UID id, @Nonnull String description, double amount) throws RemoteException
     {
+        System.out.println("Recharging card " + id);
         String[] s = Double.toString(amount).split("\\.");
         if (amount > 100 || s[s.length - 1].length() > 2)
         {
@@ -159,6 +162,7 @@ public class CardCacheNodeImpl extends UnicastRemoteObject implements CardCacheN
     @Override
     public void flush() throws RemoteException
     {
+        System.out.println("Flushing...");
         Set<UID> writeIds = cardOperations.keySet();
         for (UID id : writeIds)
         {
@@ -177,11 +181,14 @@ public class CardCacheNodeImpl extends UnicastRemoteObject implements CardCacheN
                 backupNode.flushSecondary();
             }
         }
+        backupNode.backup(new HashMap<UID, List<Operation>>(), new HashMap<UID, Double>(), new HashMap<UID, Double>());
+        System.out.println("Flushing complete");
     }
 
     @Override
     public void flushSecondary() throws RemoteException
     {
+        System.out.println("Flushing Backup...");
         Set<UID> writeIds = backupCardOperations.keySet();
         for (UID id : writeIds)
         {
@@ -200,5 +207,6 @@ public class CardCacheNodeImpl extends UnicastRemoteObject implements CardCacheN
 
             }
         }
+        System.out.println("Flushing complete");
     }
 }
