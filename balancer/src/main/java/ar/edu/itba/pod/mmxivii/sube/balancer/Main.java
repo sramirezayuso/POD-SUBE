@@ -1,8 +1,6 @@
 package ar.edu.itba.pod.mmxivii.sube.balancer;
 
-import ar.edu.itba.pod.mmxivii.sube.common.BaseMain;
-import ar.edu.itba.pod.mmxivii.sube.common.CardRegistry;
-import ar.edu.itba.pod.mmxivii.sube.common.Utils;
+import ar.edu.itba.pod.mmxivii.sube.common.*;
 
 import javax.annotation.Nonnull;
 import java.rmi.NotBoundException;
@@ -23,9 +21,7 @@ public class Main extends BaseMain
 		final CardRegistry cardRegistry = Utils.lookupObject(CARD_REGISTRY_BIND);
 		final CardServiceRegistryImpl cardServiceRegistry = new CardServiceRegistryImpl();
 		bindObject(CARD_SERVICE_REGISTRY_BIND, cardServiceRegistry);
-
-		final CardClientImpl cardClient = new CardClientImpl(cardRegistry, cardServiceRegistry);
-		bindObject(CARD_CLIENT_BIND, cardClient);
+        bindObject(LOAD_BALANCER_BIND, (LoadBalancingCardService) cardServiceRegistry.getServices().toArray()[0]);
 	}
 
 	public static void main(@Nonnull String[] args) throws Exception
@@ -46,7 +42,6 @@ public class Main extends BaseMain
 		shutdown();
 		System.out.println("Balancer exit.");
 		System.exit(0);
-
 	}
 
 	public static void shutdown()

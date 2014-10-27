@@ -40,7 +40,8 @@ public class Utils
 
 	public static final String CARD_REGISTRY_BIND = "cardRegistry";
 	public static final String CARD_SERVICE_REGISTRY_BIND = "cardServiceRegistry";
-	public static final String CARD_CLIENT_BIND = "cardClient";
+    public static final String LOAD_BALANCER_BIND = "loadBalancer";
+    public static final String CARD_CLIENT_BIND = "cardClient";
 	private static Registry rmiRegistry = null;
 
 	private Utils() {}

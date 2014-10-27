@@ -14,30 +14,28 @@ import java.util.List;
 public class CardServiceRegistryImpl extends UnicastRemoteObject implements CardServiceRegistry
 {
 	private static final long serialVersionUID = 2473638728674152366L;
-	private final List<CardService> serviceList = Collections.synchronizedList(new ArrayList<CardService>());
+	private final List<CardService> serviceList;
 
-	protected CardServiceRegistryImpl() throws RemoteException {}
+	protected CardServiceRegistryImpl() throws RemoteException
+    {
+        serviceList = Collections.singletonList((CardService) new LoadBalancingCardService());
+    }
 
 	@Override
 	public void registerService(@Nonnull CardService service) throws RemoteException
 	{
-		serviceList.add(service);
+		// Do nothing
 	}
 
 	@Override
 	public void unRegisterService(@Nonnull CardService service) throws RemoteException
 	{
-		serviceList.remove(service);
+		// Do nothing
 	}
 
 	@Override
 	public Collection<CardService> getServices() throws RemoteException
 	{
 		return serviceList;
-	}
-
-	CardService getCardService()
-	{
-		return serviceList.get(0);
 	}
 }

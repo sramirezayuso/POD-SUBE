@@ -1,9 +1,6 @@
 package ar.edu.itba.pod.mmxivii.sube.client;
 
-import ar.edu.itba.pod.mmxivii.sube.common.BaseMain;
-import ar.edu.itba.pod.mmxivii.sube.common.Card;
-import ar.edu.itba.pod.mmxivii.sube.common.CardClient;
-import ar.edu.itba.pod.mmxivii.sube.common.Utils;
+import ar.edu.itba.pod.mmxivii.sube.common.*;
 
 import javax.annotation.Nonnull;
 
@@ -20,7 +17,16 @@ public class Main extends BaseMain
 	{
 		super(args, DEFAULT_CLIENT_OPTIONS);
 		getRegistry();
-		cardClient = Utils.lookupObject(CARD_CLIENT_BIND);
+        CardRegistry cardRegistry = Utils.lookupObject(CARD_REGISTRY_BIND);
+        CardServiceRegistry cardServiceRegistry = Utils.lookupObject(CARD_SERVICE_REGISTRY_BIND);
+        try
+        {
+            cardClient = new InteractiveCardClient(cardRegistry, cardServiceRegistry);
+        }
+        catch (RemoteException e)
+        {
+
+        }
 	}
 
 	public static void main(@Nonnull String[] args ) throws Exception
@@ -33,7 +39,8 @@ public class Main extends BaseMain
 	{
 		System.out.println("Main.run");
 		final Card card = cardClient.newCard("alumno", "tarjeta");
-		final double primero = cardClient.recharge(card.getId(), "primero", 100);
+        System.out.println(cardClient.getCardBalance(card.getId()));
+        final double primero = cardClient.recharge(card.getId(), "primero", 100);
 		System.out.println("primero = " + primero);
 		final double bondi = cardClient.travel(card.getId(), "bondi", 3);
 		System.out.println("bondi = " + bondi);
