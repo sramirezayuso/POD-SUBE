@@ -18,18 +18,41 @@ import java.rmi.server.UID;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class LoadBalancingCardService extends UnicastRemoteObject implements LoadBalancer
 {
     private static final long serialVersionUID = 2919260533266908792L;
     private final List<CardCacheNode> cacheNodes;
     private int cacheNodeNumber;
+    private ScheduledExecutorService flushingExecutor = Executors.newScheduledThreadPool(1);
 
     public LoadBalancingCardService() throws RemoteException
     {
         super(0);
         cacheNodes = new ArrayList<>();
         cacheNodeNumber = 0;
+        flushingExecutor.scheduleWithFixedDelay(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                for (CardCacheNode cacheNode : cacheNodes)
+                {
+                    try
+                    {
+                        cacheNode.flush();
+                    }
+                    catch (RemoteException e)
+                    {
+
+                    }
+                }
+            }
+        }, 1, 1, TimeUnit.MINUTES);
+
     }
 
     @Override
@@ -52,12 +75,51 @@ public class LoadBalancingCardService extends UnicastRemoteObject implements Loa
 
     public void registerCacheNode(CardCacheNode cacheNode) throws RemoteException
     {
+        for (CardCacheNode originalCacheNode : cacheNodes)
+        {
+            try
+            {
+                originalCacheNode.flush();
+            }
+            catch (RemoteException e)
+            {
+
+            }
+        }
+        if (cacheNodeNumber == 0)
+        {
+            cacheNode.addBackupNode(cacheNode);
+        }
+        else
+        {
+            cacheNodes.get(cacheNodeNumber - 1).addBackupNode(cacheNode);
+        }
         cacheNodes.add(cacheNode);
+        cacheNode.addBackupNode(cacheNodes.get(0));
         cacheNodeNumber++;
     }
 
     public void unregisterCacheNode(CardCacheNode cacheNode) throws RemoteException
     {
+        for (CardCacheNode originalCacheNode : cacheNodes)
+        {
+            try
+            {
+                originalCacheNode.flush();
+            }
+            catch (RemoteException e)
+            {
+
+            }
+        }
+        if (cacheNodes.indexOf(cacheNode) == cacheNodeNumber - 1)
+        {
+            cacheNodes.get(cacheNodes.indexOf(cacheNode) - 1).addBackupNode(cacheNodes.get(0));
+        }
+        else
+        {
+            cacheNodes.get(cacheNodes.indexOf(cacheNode) - 1).addBackupNode(cacheNodes.get(cacheNodes.indexOf(cacheNode) + 1));
+        }
         cacheNodes.remove(cacheNode);
         cacheNodeNumber--;
     }

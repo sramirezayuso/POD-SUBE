@@ -9,6 +9,7 @@ package ar.edu.itba.pod.mmxivii.sube.service;
 
 import ar.edu.itba.pod.mmxivii.sube.common.CardCacheNode;
 import ar.edu.itba.pod.mmxivii.sube.common.CardRegistry;
+import ar.edu.itba.pod.mmxivii.sube.common.Operation;
 
 import javax.annotation.Nonnull;
 import java.rmi.RemoteException;
@@ -24,6 +25,12 @@ public class CardCacheNodeImpl extends UnicastRemoteObject implements CardCacheN
     private Map<UID, List<Operation>> cardOperations;
     private Map<UID, Double> cachedCardOperationAggregates;
     private Map<UID, Double> cachedCardValues;
+
+    private Map<UID, List<Operation>> backupCardOperations;
+    private Map<UID, Double> backupCachedCardOperationAggregates;
+    private Map<UID, Double> backupCachedCardValues;
+
+    private CardCacheNode backupNode;
 
     public CardCacheNodeImpl(CardRegistry cardRegistry) throws RemoteException
     {
@@ -68,7 +75,7 @@ public class CardCacheNodeImpl extends UnicastRemoteObject implements CardCacheN
         {
             if (cachedCardValues.containsKey(id))
             {
-                if (amount > cachedCardValues.get(id))
+                if (amount > cachedCardValues.get(id) + cachedCardOperationAggregates.get(id))
                 {
                     throw new IllegalArgumentException();
                 }
@@ -133,6 +140,23 @@ public class CardCacheNodeImpl extends UnicastRemoteObject implements CardCacheN
     }
 
     @Override
+    public void addBackupNode(CardCacheNode cacheNode) throws RemoteException
+    {
+        this.backupNode = cacheNode;
+        this.backupCardOperations = new HashMap<>();
+        this.backupCachedCardOperationAggregates = new HashMap<>();
+        this.backupCachedCardValues = new HashMap<>();
+    }
+
+    @Override
+    public void backup(Map<UID, List<Operation>> backupCardOperations, Map<UID, Double> backupCachedCardOperationAggregates, Map<UID, Double> backupCachedCardValues) throws RemoteException
+    {
+        this.backupCardOperations = backupCardOperations;
+        this.backupCachedCardOperationAggregates = backupCachedCardOperationAggregates;
+        this.backupCachedCardValues = backupCachedCardValues;
+    }
+
+    @Override
     public void flush() throws RemoteException
     {
         Set<UID> writeIds = cardOperations.keySet();
@@ -150,30 +174,31 @@ public class CardCacheNodeImpl extends UnicastRemoteObject implements CardCacheN
             }
             catch (RemoteException e)
             {
-
+                backupNode.flushSecondary();
             }
         }
     }
 
-    private class Operation
+    @Override
+    public void flushSecondary() throws RemoteException
     {
-        private String description;
-        private double amount;
-
-        public Operation(String description, double amount)
+        Set<UID> writeIds = backupCardOperations.keySet();
+        for (UID id : writeIds)
         {
-            this.description = description;
-            this.amount = amount;
-        }
+            try
+            {
+                for (Operation operation : backupCardOperations.get(id))
+                {
+                    cardRegistry.addCardOperation(id, operation.getDescription(), operation.getAmount());
+                }
+                backupCardOperations.remove(id);
+                backupCachedCardOperationAggregates.remove(id);
+                backupCachedCardValues.remove(id);
+            }
+            catch (RemoteException e)
+            {
 
-        public String getDescription()
-        {
-            return description;
-        }
-
-        public double getAmount()
-        {
-            return amount;
+            }
         }
     }
 }
